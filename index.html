@@ -56,6 +56,9 @@ button:focus-visible{outline:2px solid var(--flame);outline-offset:3px}
 .cam{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);z-index:0;display:none;background:#000}
 .camdim{position:fixed;inset:0;z-index:0;display:none;background:rgba(20,12,18,.3);transition:background 1s}
 body.camon .cam,body.camon .camdim{display:block}
+.cambg{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1) scale(1.15);filter:blur(22px) brightness(.55);z-index:0;display:none}
+body.camon .cambg{display:block}
+body.camon.wide .cam{object-fit:contain;background:transparent}
 .glow{z-index:0}
 .texts,.cake-wrap,.controls{position:relative;z-index:1}
 .texts{display:flex;flex-direction:column;align-items:center;gap:14px;border-radius:20px;transition:background .4s}
@@ -76,6 +79,7 @@ body.camon .hint{margin:0}
 <body>
 
 <div class="stage" id="stage">
+  <video id="cambg" class="cambg" playsinline muted autoplay aria-hidden="true"></video>
   <video id="cam" class="cam" playsinline muted autoplay></video>
   <div class="camdim" id="camdim"></div>
   <div class="glow"></div>
@@ -128,6 +132,7 @@ body.camon .hint{margin:0}
   <div class="controls">
     <div class="meter" aria-hidden="true"><i id="meter"></i></div>
     <button id="recbtn" type="button">📹 얼굴 녹화하며 불기</button>
+    <button id="fit" type="button" class="ghost" hidden>🔍 얼굴 크게 보기</button>
     <button id="stop" type="button" class="ghost" hidden>녹화 끝내기</button>
     <button id="mic" type="button" class="ghost">🎤 녹화 없이 마이크로만 불기</button>
     <button id="hold" type="button" class="ghost">마이크 없이: 꾹 누르고 있기</button>
@@ -275,6 +280,10 @@ body.camon .hint{margin:0}
   const rc=document.getElementById('rc'), rx=rc.getContext('2d'), W=rc.width, H=rc.height;
   const resultEl=document.getElementById('result'), outV=document.getElementById('out');
   const cfC=document.getElementById('cf'), titleEl=document.getElementById('title');
+  const camBg=document.getElementById('cambg'), fitBtn=document.getElementById('fit');
+  let wide=true;
+  function setFit(w){ wide=w; document.body.classList.toggle('wide',wide); fitBtn.textContent=wide?'🔍 얼굴 크게 보기':'↔ 넓게 보기'; }
+  fitBtn.addEventListener('click',()=>setFit(!wide));
   let recorder=null, chunks=[], recording=false, recStart=0, outBlob=null, outName='';
 
   let cakeImg=null;
@@ -305,7 +314,11 @@ body.camon .hint{margin:0}
     const n=litCount();
     rx.fillStyle='#1b1420'; rx.fillRect(0,0,W,H);
     const vw=cam.videoWidth, vh=cam.videoHeight;
-    if(vw&&vh){const sc=Math.max(W/vw,H/vh),dw=vw*sc,dh=vh*sc; rx.save(); rx.translate(W,0); rx.scale(-1,1); rx.drawImage(cam,(W-dw)/2,(H-dh)/2,dw,dh); rx.restore();}
+    if(vw&&vh){
+      const draw=(sc,blur)=>{const dw=vw*sc,dh=vh*sc; rx.save(); rx.translate(W,0); rx.scale(-1,1); if(blur&&'filter' in rx) rx.filter='blur(22px) brightness(.55)'; rx.drawImage(cam,(W-dw)/2,(H-dh)/2,dw,dh); rx.restore();};
+      const cover=Math.max(W/vw,H/vh), fit=Math.min(W/vw,H/vh);
+      if(wide&&fit<cover){ draw(cover*1.15,true); draw(fit,false); } else draw(cover,false);
+    }
     rx.fillStyle='rgba(20,12,18,'+(0.3+(3-n)*0.17)+')'; rx.fillRect(0,0,W,H);
     const ox=(W-600)/2, oy=H-520-90;
     if(n){const g=rx.createRadialGradient(W/2,oy+140,0,W/2,oy+140,460); g.addColorStop(0,'rgba(255,190,90,'+(0.38*n/3)+')'); g.addColorStop(1,'rgba(255,190,90,0)'); rx.fillStyle=g; rx.fillRect(0,0,W,H);}
@@ -346,12 +359,14 @@ body.camon .hint{margin:0}
     }
     try{
       stream=await navigator.mediaDevices.getUserMedia({
-        video:{facingMode:'user',width:{ideal:720},height:{ideal:1280}},
+        video:{facingMode:'user'},
         audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
     }catch(e){
       hint.textContent='카메라를 켤 수 없어서\n마이크로만 불게요'; recBtn.hidden=true; return startMic();
     }
-    cam.srcObject=stream; try{await cam.play()}catch(e){}
+    cam.srcObject=stream; camBg.srcObject=stream; try{await cam.play()}catch(e){} try{await camBg.play()}catch(e){}
+    try{ const vt=stream.getVideoTracks()[0], cap=vt.getCapabilities?vt.getCapabilities():{}; if(cap.zoom&&cap.zoom.min!=null) await vt.applyConstraints({advanced:[{zoom:cap.zoom.min}]}); }catch(e){}
+    setFit(wide); fitBtn.hidden=false;
     document.body.classList.add('camon'); recBtn.hidden=true; micBtn.hidden=true;
     attachAnalyser();
     const vs=rc.captureStream(30); stream.getAudioTracks().forEach(t=>vs.addTrack(t));
@@ -366,7 +381,7 @@ body.camon .hint{margin:0}
     if(!recording) return; recording=false;
     try{ recorder.stop() }catch(e){}
     recEl.hidden=true; stopBtn.hidden=true;
-    stopMic(); cam.srcObject=null; document.body.classList.remove('camon');
+    stopMic(); cam.srcObject=null; camBg.srcObject=null; fitBtn.hidden=true; document.body.classList.remove('camon');
   }
   function showResult(){
     const type=(recorder&&recorder.mimeType)||'video/webm';
