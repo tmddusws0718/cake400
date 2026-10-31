@@ -132,6 +132,7 @@ body.camon .hint{margin:0}
   <div class="controls">
     <div class="meter" aria-hidden="true"><i id="meter"></i></div>
     <button id="recbtn" type="button">📹 얼굴 녹화하며 불기</button>
+    <button id="sens" type="button" class="ghost" hidden>🌬 바람 감도: 높음</button>
     <button id="fit" type="button" class="ghost" hidden>🔍 얼굴 크게 보기</button>
     <button id="stop" type="button" class="ghost" hidden>녹화 끝내기</button>
     <button id="mic" type="button" class="ghost">🎤 녹화 없이 마이크로만 불기</button>
@@ -208,6 +209,13 @@ body.camon .hint{margin:0}
     }
   }
 
+  // 바람 감도: 주변 소음(base)보다 얼마나 커야 '부는 중'으로 볼지
+  const SENS=[{name:'보통',k:60},{name:'높음',k:38},{name:'아주 높음',k:22}];
+  let sensI=1, base=null, calib=[], calibEnd=0;
+  const sensBtn=document.getElementById('sens');
+  function showSens(){ sensBtn.textContent='🌬 바람 감도: '+SENS[sensI].name; }
+  sensBtn.addEventListener('click',()=>{ sensI=(sensI+1)%SENS.length; showSens(); });
+
   async function startMic(){
     try{
       stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
@@ -223,6 +231,7 @@ body.camon .hint{margin:0}
     analyser=audioCtx.createAnalyser(); analyser.fftSize=1024;
     if(audioCtx.resume)audioCtx.resume(); src.connect(analyser); data=new Uint8Array(analyser.frequencyBinCount);
     micBtn.hidden=true; hint.textContent='준비됐어, 지금 "후~" 불어봐';
+    base=null; calib=[]; calibEnd=performance.now()+900; showSens(); sensBtn.hidden=false;
     loop();
   }
   function loop(){
@@ -231,7 +240,12 @@ body.camon .hint{margin:0}
     // 바람 소리는 저역대 에너지가 큼
     let sum=0,n=Math.floor(data.length*0.12);
     for(let i=1;i<n;i++)sum+=data[i];
-    const level=Math.max(0,(sum/n-90)/110);
+    const avg=sum/n;
+    // 처음 0.9초 동안 주변 소음을 재고, 그중 조용한 쪽을 기준으로 삼음
+    if(base===null){ calib.push(avg); if(performance.now()<calibEnd){ requestAnimationFrame(loop); return; }
+      calib.sort((a,b)=>a-b); base=calib[Math.floor(calib.length*0.3)]; }
+    const level=Math.max(0,(avg-base-6)/SENS[sensI].k);
+    if(level<0.1) base=base*0.998+avg*0.002; // 조용할 때만 기준을 천천히 따라감
     feed(level);
     requestAnimationFrame(loop);
   }
@@ -239,7 +253,7 @@ body.camon .hint{margin:0}
     if(stream)stream.getTracks().forEach(t=>t.stop());
     analyser=null; stream=null;
     if(audioCtx){try{audioCtx.close()}catch(e){} audioCtx=null}
-    meter.style.width='0%'; sway(0);
+    meter.style.width='0%'; sway(0); sensBtn.hidden=true;
   }
 
   // 마이크 없이 꾹 누르기
