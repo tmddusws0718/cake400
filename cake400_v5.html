@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>400일 케이크</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=Gowun+Dodum&display=swap">
+<style>
+/* 한 화면 무대: 어두운 방 + 케이크 하나, 촛불이 유일한 광원 */
+:root{
+  --room:#1b1420; --room2:#2a1d2c; --ink:#f6ead8; --muted:#b9a7b0;
+  --cream:#fff4e6; --cream2:#f3dcc4; --berry:#d9536f; --berry2:#a8344f;
+  --wax:#fbe7ee; --flame:#ffcf5a; --glow:rgba(255,190,90,.38);
+  --display:"Gowun Batang","Nanum Myeongjo",serif;
+  --body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;margin:0;padding-top:env(safe-area-inset-top,0px);box-sizing:border-box}
+*{box-sizing:border-box}
+body{background:var(--room);color:var(--ink);font-family:var(--body);overflow:hidden;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+.stage{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;position:relative}
+.glow{position:fixed;inset:0;pointer-events:none;transition:opacity 1.2s;
+  background:radial-gradient(60% 45% at 50% 48%,var(--glow),transparent 70%)}
+.lit-0 .glow{opacity:0}
+h1,.sub,.hint{word-break:keep-all;overflow-wrap:break-word;text-wrap:balance;white-space:pre-line}
+h1{font-family:var(--display);font-size:clamp(26px,7vw,38px);margin:0;text-align:center;text-wrap:balance;letter-spacing:.02em}
+.hint{margin:-10px 0 0;color:var(--flame);font-size:14px;text-align:center;opacity:.9}
+.sub{max-width:24em;line-height:1.5;margin:0;color:var(--muted);font-size:15px;text-align:center;min-height:1.4em}
+.cake-wrap{width:min(340px,88vw);max-width:100%}
+svg{width:100%;height:auto;display:block;overflow:visible}
+.flame{transform-box:fill-box;transform-origin:50% 100%;transition:opacity .35s,transform .1s}
+.flame.out{opacity:0;transform:scale(.2)}
+.smoke{opacity:0}
+.smoke.on{animation:smoke 2.2s ease-out forwards}
+@keyframes smoke{0%{opacity:.7;transform:translateY(0)}100%{opacity:0;transform:translateY(-46px) translateX(6px)}}
+.flicker{animation:flick .18s infinite alternate}
+@keyframes flick{from{transform:scaleY(1) skewX(0)}to{transform:scaleY(1.08) skewX(2deg)}}
+.controls{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:340px}
+button{font:inherit;font-size:16px;border:0;border-radius:999px;padding:14px 22px;cursor:pointer;width:100%;
+  background:var(--berry);color:#fff;touch-action:none}
+button.ghost{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,.18);padding:10px 18px;font-size:14px;width:auto}
+button:focus-visible{outline:2px solid var(--flame);outline-offset:3px}
+.meter{width:100%;height:6px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--flame);transition:width .08s}
+.confetti{position:fixed;inset:0;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.flicker{animation:none}.smoke.on{animation:none}}
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+  <div class="glow"></div>
+  <h1 id="title">우리가 함께한 400일</h1>
+  <p class="sub" id="sub">400일 축하해!
+같이 웃고 먹고 걸은 날들이 모여서
+벌써 400일이 됐어</p>
+  <p class="hint" id="hint">눈 감고 소원 하나 빈 다음,
+화면에 대고 "후~" 불어줘</p>
+
+  <div class="cake-wrap">
+    <svg viewBox="0 0 300 260" aria-label="숫자 4, 0, 0 초가 꽂힌 케이크">
+      <defs>
+        <radialGradient id="fl" cx="50%" cy="70%" r="60%">
+          <stop offset="0" stop-color="#fff8d6"/><stop offset=".45" stop-color="#ffcf5a"/><stop offset="1" stop-color="#ff7a2e"/>
+        </radialGradient>
+      </defs>
+      <!-- 접시 -->
+      <ellipse cx="150" cy="238" rx="138" ry="16" fill="#e9dde6" opacity=".9"/>
+      <!-- 케이크 몸통 -->
+      <rect x="40" y="150" width="220" height="84" rx="10" fill="#f3dcc4"/>
+      <rect x="40" y="186" width="220" height="10" fill="#d9536f" opacity=".85"/>
+      <ellipse cx="150" cy="150" rx="110" ry="16" fill="#fff4e6"/>
+      <!-- 크림 물결 -->
+      <path d="M40 152 q13 18 27 0 q13 18 27 0 q13 18 28 0 q13 18 27 0 q13 18 28 0 q13 18 27 0 q13 18 28 0 q13 18 28 0" fill="#fff4e6"/>
+      <!-- 딸기 -->
+      <g fill="#d9536f"><circle cx="62" cy="146" r="7"/><circle cx="238" cy="146" r="7"/><circle cx="100" cy="154" r="6"/><circle cx="200" cy="154" r="6"/></g>
+      <text x="150" y="222" text-anchor="middle" font-family="Gowun Batang,serif" font-size="15" fill="#a8344f">D+400</text>
+
+      <!-- 숫자 초 4 0 0 -->
+      <g id="candles" font-family="Gowun Batang,serif" font-weight="700" font-size="74" text-anchor="middle">
+        <g data-c="0"><text x="92" y="146" fill="#fbe7ee" stroke="#d9536f" stroke-width="2">4</text>
+          <line x1="96" y1="85" x2="96" y2="93" stroke="#3a2a2a" stroke-width="2"/></g>
+        <g data-c="1"><text x="150" y="146" fill="#fbe7ee" stroke="#d9536f" stroke-width="2">0</text>
+          <line x1="150" y1="85" x2="150" y2="93" stroke="#3a2a2a" stroke-width="2"/></g>
+        <g data-c="2"><text x="208" y="146" fill="#fbe7ee" stroke="#d9536f" stroke-width="2">0</text>
+          <line x1="208" y1="85" x2="208" y2="93" stroke="#3a2a2a" stroke-width="2"/></g>
+      </g>
+      <g id="flames">
+        <g class="fwrap" data-x="96"><path class="flame flicker" d="M96 58 C104 70 103 80 96 86 C89 80 88 70 96 58Z" fill="url(#fl)"/><circle class="smoke" cx="96" cy="80" r="4" fill="#cfc4cc"/></g>
+        <g class="fwrap" data-x="150"><path class="flame flicker" d="M150 58 C158 70 157 80 150 86 C143 80 142 70 150 58Z" fill="url(#fl)"/><circle class="smoke" cx="150" cy="80" r="4" fill="#cfc4cc"/></g>
+        <g class="fwrap" data-x="208"><path class="flame flicker" d="M208 58 C216 70 215 80 208 86 C201 80 200 70 208 58Z" fill="url(#fl)"/><circle class="smoke" cx="208" cy="80" r="4" fill="#cfc4cc"/></g>
+      </g>
+    </svg>
+  </div>
+
+  <div class="controls">
+    <div class="meter" aria-hidden="true"><i id="meter"></i></div>
+    <button id="mic" type="button">🎤 마이크 켜고 불기</button>
+    <button id="hold" type="button" class="ghost">마이크 없이: 꾹 누르고 있기</button>
+    <button id="relight" type="button" class="ghost" hidden>다시 불 붙이기</button>
+  </div>
+  <canvas class="confetti" id="cf"></canvas>
+</div>
+
+<script>
+(function(){
+  const stage=document.getElementById('stage');
+  const sub=document.getElementById('sub');
+  const meter=document.getElementById('meter');
+  const hint=document.getElementById('hint');
+  const micBtn=document.getElementById('mic');
+  const holdBtn=document.getElementById('hold');
+  const relight=document.getElementById('relight');
+  const flames=[...document.querySelectorAll('.fwrap')];
+  let lit=[true,true,true], blowing=0, audioCtx=null, analyser=null, data=null, stream=null;
+
+  function litCount(){return lit.filter(Boolean).length}
+  function setGlow(){stage.className='stage lit-'+litCount();document.querySelector('.glow').style.opacity=litCount()/3}
+
+  function sway(level){ // 바람 세기에 따라 불꽃이 기울어짐
+    flames.forEach((g,i)=>{ if(!lit[i])return;
+      const p=g.querySelector('.flame');
+      p.style.transform='skewX('+(-level*35)+'deg) scaleY('+(1-level*.35)+')';
+    });
+  }
+
+  function extinguish(i){
+    if(!lit[i])return; lit[i]=false;
+    const g=flames[i]; g.querySelector('.flame').classList.add('out');
+    const s=g.querySelector('.smoke'); s.classList.remove('on'); void s.getBBox(); s.classList.add('on');
+    if(navigator.vibrate) try{navigator.vibrate(30)}catch(e){}
+    setGlow();
+    const left=litCount();
+    if(left===2) hint.textContent='하나 꺼졌다! 조금만 더 세게~';
+    else if(left===1) hint.textContent='마지막 하나 남았어, 한 번만 더!';
+    if(left===0) done();
+  }
+
+  function done(){
+    sub.textContent='방금 빈 소원, 꼭 이뤄질 거야.\n400일 동안 곁에 있어줘서 고마워.\n앞으로의 날들도 지금처럼 함께하자';
+    hint.textContent='400일 진심으로 축하해 💛';
+    relight.hidden=false; holdBtn.hidden=true; micBtn.hidden=true;
+    stopMic(); confetti();
+  }
+
+  // 바람 누적: 세게 오래 불수록 하나씩 꺼짐
+  function feed(level){
+    meter.style.width=Math.min(100,level*100)+'%';
+    sway(Math.min(1,level));
+    if(level>0.35){ blowing+=level; }
+    else blowing=Math.max(0,blowing-0.15);
+    if(blowing>4){
+      const remain=lit.map((v,i)=>v?i:-1).filter(i=>i>=0);
+      if(remain.length) extinguish(remain[Math.floor(Math.random()*remain.length)]);
+      blowing=1.5;
+    }
+  }
+
+  async function startMic(){
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    }catch(e){
+      hint.textContent='마이크를 쓸 수 없어서,\n아래 버튼을 꾹 눌러 불어주세요';
+      micBtn.hidden=true; holdBtn.classList.remove('ghost'); return;
+    }
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const src=audioCtx.createMediaStreamSource(stream);
+    analyser=audioCtx.createAnalyser(); analyser.fftSize=1024;
+    src.connect(analyser); data=new Uint8Array(analyser.frequencyBinCount);
+    micBtn.hidden=true; hint.textContent='준비됐어, 지금 "후~" 불어봐';
+    loop();
+  }
+  function loop(){
+    if(!analyser)return;
+    analyser.getByteFrequencyData(data);
+    // 바람 소리는 저역대 에너지가 큼
+    let sum=0,n=Math.floor(data.length*0.12);
+    for(let i=1;i<n;i++)sum+=data[i];
+    const level=Math.max(0,(sum/n-90)/110);
+    feed(level);
+    requestAnimationFrame(loop);
+  }
+  function stopMic(){
+    if(stream)stream.getTracks().forEach(t=>t.stop());
+    analyser=null; stream=null;
+    if(audioCtx){try{audioCtx.close()}catch(e){} audioCtx=null}
+    meter.style.width='0%'; sway(0);
+  }
+
+  // 마이크 없이 꾹 누르기
+  let holdT=null,holdLv=0;
+  function holdStart(e){e.preventDefault(); clearInterval(holdT);
+    holdT=setInterval(()=>{holdLv=Math.min(1,holdLv+0.08);feed(holdLv)},60)}
+  function holdEnd(){clearInterval(holdT);holdT=setInterval(()=>{holdLv=Math.max(0,holdLv-0.12);feed(holdLv);if(holdLv<=0)clearInterval(holdT)},60)}
+  holdBtn.addEventListener('pointerdown',holdStart);
+  ['pointerup','pointerleave','pointercancel'].forEach(t=>holdBtn.addEventListener(t,holdEnd));
+
+  micBtn.addEventListener('click',startMic);
+  relight.addEventListener('click',()=>{
+    lit=[true,true,true]; blowing=0; holdLv=0;
+    flames.forEach(g=>{const p=g.querySelector('.flame');p.classList.remove('out');p.style.transform='';g.querySelector('.smoke').classList.remove('on')});
+    relight.hidden=true; holdBtn.hidden=false; micBtn.hidden=false;
+    sub.textContent='400일 축하해!\n같이 웃고 먹고 걸은 날들이 모여서\n벌써 400일이 됐어';
+    hint.textContent='눈 감고 소원 하나 빈 다음,\n화면에 대고 "후~" 불어줘'; setGlow();
+  });
+
+  // 꽃가루
+  function confetti(){
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    const c=document.getElementById('cf'),x=c.getContext('2d');
+    c.width=innerWidth;c.height=innerHeight;
+    const cols=['#ffcf5a','#d9536f','#fbe7ee','#f3dcc4','#ffffff'];
+    const ps=Array.from({length:120},()=>({x:Math.random()*c.width,y:-20-Math.random()*c.height*.5,
+      vx:(Math.random()-.5)*2,vy:2+Math.random()*3,r:Math.random()*6.28,s:4+Math.random()*5,c:cols[Math.floor(Math.random()*cols.length)]}));
+    let f=0;(function d(){x.clearRect(0,0,c.width,c.height);
+      ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=.1;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore()});
+      if(++f<260)requestAnimationFrame(d);else x.clearRect(0,0,c.width,c.height)})();
+  }
+  setGlow();
+})();
+</script>
+
+</body>
+</html>
