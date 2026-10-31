@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="theme-color" content="#1b1420">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>400일 케이크</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=Gowun+Dodum&display=swap">
+<style>
+/* 한 화면 무대: 어두운 방 + 케이크 하나, 촛불이 유일한 광원 */
+:root{
+  --room:#1b1420; --room2:#2a1d2c; --ink:#f6ead8; --muted:#b9a7b0;
+  --cream:#fff4e6; --cream2:#f3dcc4; --berry:#d9536f; --berry2:#a8344f;
+  --wax:#fbe7ee; --flame:#ffcf5a; --glow:rgba(255,190,90,.38);
+  --display:"Gowun Batang","Nanum Myeongjo",serif;
+  --body:"Gowun Dodum","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;margin:0;padding-top:env(safe-area-inset-top,0px);box-sizing:border-box}
+*{box-sizing:border-box}
+body{background:var(--room);color:var(--ink);font-family:var(--body);overflow:hidden;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+.stage{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;position:relative}
+.glow{position:fixed;inset:0;pointer-events:none;transition:opacity 1.2s;
+  background:radial-gradient(60% 45% at 50% 48%,var(--glow),transparent 70%)}
+.lit-0 .glow{opacity:0}
+h1,.sub,.hint{word-break:keep-all;overflow-wrap:break-word;text-wrap:balance;white-space:pre-line}
+h1{font-family:var(--display);font-size:clamp(26px,7vw,38px);margin:0;text-align:center;text-wrap:balance;letter-spacing:.02em}
+.hint{margin:-10px 0 0;color:var(--flame);font-size:14px;text-align:center;opacity:.9}
+.sub{max-width:24em;line-height:1.5;margin:0;color:var(--muted);font-size:15px;text-align:center;min-height:1.4em}
+.cake-wrap{width:min(340px,88vw);max-width:100%}
+svg{width:100%;height:auto;display:block;overflow:visible}
+.flame{transform-box:fill-box;transform-origin:50% 100%;transition:opacity .35s,transform .1s}
+.flame.out{opacity:0;transform:scale(.2)}
+.smoke{opacity:0}
+.smoke.on{animation:smoke 2.2s ease-out forwards}
+@keyframes smoke{0%{opacity:.7;transform:translateY(0)}100%{opacity:0;transform:translateY(-46px) translateX(6px)}}
+.flicker{animation:flick .18s infinite alternate}
+@keyframes flick{from{transform:scaleY(1) skewX(0)}to{transform:scaleY(1.08) skewX(2deg)}}
+.controls{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:340px}
+button{font:inherit;font-size:16px;border:0;border-radius:999px;padding:14px 22px;cursor:pointer;width:100%;
+  background:var(--berry);color:#fff;touch-action:none}
+button.ghost{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,.18);padding:10px 18px;font-size:14px;width:auto}
+button:focus-visible{outline:2px solid var(--flame);outline-offset:3px}
+.meter{width:100%;height:6px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--flame);transition:width .08s}
+.fs{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));z-index:5;width:auto;padding:8px 14px;font-size:13px;background:rgba(255,255,255,.08);color:var(--muted);border:1px solid rgba(255,255,255,.16)}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:3}
+[hidden]{display:none!important}
+.cam{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);z-index:0;display:none;background:#000}
+.camdim{position:fixed;inset:0;z-index:0;display:none;background:rgba(20,12,18,.3);transition:background 1s}
+body.camon .cam,body.camon .camdim{display:block}
+.glow{z-index:0}
+.texts,.cake-wrap,.controls{position:relative;z-index:1}
+.texts{display:flex;flex-direction:column;align-items:center;gap:14px;border-radius:20px;transition:background .4s}
+body.camon .texts{background:rgba(20,12,18,.5);padding:14px 18px}
+body.camon .hint{margin:0}
+.rec{position:fixed;z-index:5;top:calc(12px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px));display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.5);color:#fff;font-size:13px;padding:6px 12px;border-radius:999px;font-variant-numeric:tabular-nums}
+.rec span{width:9px;height:9px;border-radius:50%;background:#ff4d5e;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.25}}
+.offscreen{position:fixed;left:-10000px;top:0;width:10px;height:10px}
+.result{position:fixed;inset:0;z-index:10;background:var(--room);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.result p{margin:0;font-family:var(--display);font-size:20px}
+.result video{max-height:62vh;max-width:100%;border-radius:16px;background:#000}
+.rbtns{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:340px}
+@media (prefers-reduced-motion:reduce){.flicker{animation:none}.smoke.on{animation:none}}
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+  <video id="cam" class="cam" playsinline muted autoplay></video>
+  <div class="camdim" id="camdim"></div>
+  <div class="glow"></div>
+  <div class="rec" id="rec" hidden><span></span>녹화 중 <b id="rect">00:00</b></div>
+  <div class="texts">
+  <h1 id="title">우리가 함께한 400일</h1>
+  <p class="sub" id="sub">400일 축하해!
+같이 웃고 먹고 걸은 날들이 모여서
+벌써 400일이 됐어</p>
+  <p class="hint" id="hint">눈 감고 소원 하나 빈 다음,
+화면에 대고 "후~" 불어줘</p>
+  </div>
+
+  <div class="cake-wrap">
+    <svg viewBox="0 0 300 260" aria-label="숫자 4, 0, 0 초가 꽂힌 케이크">
+      <defs>
+        <radialGradient id="fl" cx="50%" cy="70%" r="60%">
+          <stop offset="0" stop-color="#fff8d6"/><stop offset=".45" stop-color="#ffcf5a"/><stop offset="1" stop-color="#ff7a2e"/>
+        </radialGradient>
+      </defs>
+      <!-- 접시 -->
+      <ellipse cx="150" cy="238" rx="138" ry="16" fill="#e9dde6" opacity=".9"/>
+      <!-- 케이크 몸통 -->
+      <rect x="40" y="150" width="220" height="84" rx="10" fill="#f3dcc4"/>
+      <rect x="40" y="186" width="220" height="10" fill="#d9536f" opacity=".85"/>
+      <ellipse cx="150" cy="150" rx="110" ry="16" fill="#fff4e6"/>
+      <!-- 크림 물결 -->
+      <path d="M40 152 q13 18 27 0 q13 18 27 0 q13 18 28 0 q13 18 27 0 q13 18 28 0 q13 18 27 0 q13 18 28 0 q13 18 28 0" fill="#fff4e6"/>
+      <!-- 딸기 -->
+      <g fill="#d9536f"><circle cx="62" cy="146" r="7"/><circle cx="238" cy="146" r="7"/><circle cx="100" cy="154" r="6"/><circle cx="200" cy="154" r="6"/></g>
+      <text x="150" y="222" text-anchor="middle" font-family="Gowun Batang,serif" font-size="15" fill="#a8344f">D+400</text>
+
+      <!-- 숫자 초 4 0 0 -->
+      <g id="candles" font-family="Gowun Batang,serif" font-weight="700" font-size="74" text-anchor="middle">
+        <g data-c="0"><text x="92" y="146" fill="#fbe7ee" stroke="#d9536f" stroke-width="2">4</text>
+          <line x1="96" y1="85" x2="96" y2="93" stroke="#3a2a2a" stroke-width="2"/></g>
+        <g data-c="1"><text x="150" y="146" fill="#fbe7ee" stroke="#d9536f" stroke-width="2">0</text>
+          <line x1="150" y1="85" x2="150" y2="93" stroke="#3a2a2a" stroke-width="2"/></g>
+        <g data-c="2"><text x="208" y="146" fill="#fbe7ee" stroke="#d9536f" stroke-width="2">0</text>
+          <line x1="208" y1="85" x2="208" y2="93" stroke="#3a2a2a" stroke-width="2"/></g>
+      </g>
+      <g id="flames">
+        <g class="fwrap" data-x="96"><path class="flame flicker" d="M96 58 C104 70 103 80 96 86 C89 80 88 70 96 58Z" fill="url(#fl)"/><circle class="smoke" cx="96" cy="80" r="4" fill="#cfc4cc"/></g>
+        <g class="fwrap" data-x="150"><path class="flame flicker" d="M150 58 C158 70 157 80 150 86 C143 80 142 70 150 58Z" fill="url(#fl)"/><circle class="smoke" cx="150" cy="80" r="4" fill="#cfc4cc"/></g>
+        <g class="fwrap" data-x="208"><path class="flame flicker" d="M208 58 C216 70 215 80 208 86 C201 80 200 70 208 58Z" fill="url(#fl)"/><circle class="smoke" cx="208" cy="80" r="4" fill="#cfc4cc"/></g>
+      </g>
+    </svg>
+  </div>
+
+  <div class="controls">
+    <div class="meter" aria-hidden="true"><i id="meter"></i></div>
+    <button id="recbtn" type="button">📹 얼굴 녹화하며 불기</button>
+    <button id="stop" type="button" class="ghost" hidden>녹화 끝내기</button>
+    <button id="mic" type="button" class="ghost">🎤 녹화 없이 마이크로만 불기</button>
+    <button id="hold" type="button" class="ghost">마이크 없이: 꾹 누르고 있기</button>
+    <button id="relight" type="button" class="ghost" hidden>다시 불 붙이기</button>
+  </div>
+  <button id="fs" class="fs" type="button">전체화면</button>
+  <canvas class="confetti" id="cf"></canvas>
+  <canvas id="rc" class="offscreen" width="720" height="1280"></canvas>
+  <div class="result" id="result" hidden>
+    <p>우리의 400일, 영상으로 남겼어</p>
+    <video id="out" playsinline controls></video>
+    <div class="rbtns">
+      <button id="save" type="button">영상 저장하기</button>
+      <button id="share" type="button" class="ghost">공유하기</button>
+      <button id="again" type="button" class="ghost">다시 찍기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const stage=document.getElementById('stage');
+  const sub=document.getElementById('sub');
+  const meter=document.getElementById('meter');
+  const hint=document.getElementById('hint');
+  const micBtn=document.getElementById('mic');
+  const holdBtn=document.getElementById('hold');
+  const relight=document.getElementById('relight');
+  const flames=[...document.querySelectorAll('.fwrap')];
+  let lit=[true,true,true], blowing=0, audioCtx=null, analyser=null, data=null, stream=null;
+
+  function litCount(){return lit.filter(Boolean).length}
+  function setGlow(){stage.className='stage lit-'+litCount();document.querySelector('.glow').style.opacity=litCount()/3;var cd=document.getElementById('camdim');if(cd)cd.style.background='rgba(20,12,18,'+(0.3+(3-litCount())*0.17).toFixed(2)+')'}
+
+  function sway(level){ // 바람 세기에 따라 불꽃이 기울어짐
+    flames.forEach((g,i)=>{ if(!lit[i])return;
+      const p=g.querySelector('.flame');
+      p.style.transform='skewX('+(-level*35)+'deg) scaleY('+(1-level*.35)+')';
+    });
+  }
+
+  function extinguish(i){
+    if(!lit[i])return; lit[i]=false;
+    const g=flames[i]; g.querySelector('.flame').classList.add('out');
+    const s=g.querySelector('.smoke'); s.classList.remove('on'); void s.getBBox(); s.classList.add('on');
+    if(navigator.vibrate) try{navigator.vibrate(30)}catch(e){}
+    setGlow();
+    const left=litCount();
+    if(left===2) hint.textContent='하나 꺼졌다! 조금만 더 세게~';
+    else if(left===1) hint.textContent='마지막 하나 남았어, 한 번만 더!';
+    if(left===0) done();
+  }
+
+  function done(){
+    sub.textContent='방금 빈 소원, 꼭 이뤄질 거야.\n400일 동안 곁에 있어줘서 고마워.\n앞으로의 날들도 지금처럼 함께하자';
+    hint.textContent='400일 진심으로 축하해 💛';
+    relight.hidden=false; holdBtn.hidden=true; micBtn.hidden=true; recBtn.hidden=true;
+    confetti();
+    if(recording) setTimeout(finishRec,3500); else stopMic();
+  }
+
+  // 바람 누적: 세게 오래 불수록 하나씩 꺼짐
+  let curLevel=0;
+  function feed(level){ curLevel=level;
+    meter.style.width=Math.min(100,level*100)+'%';
+    sway(Math.min(1,level));
+    if(level>0.35){ blowing+=level; }
+    else blowing=Math.max(0,blowing-0.15);
+    if(blowing>4){
+      const remain=lit.map((v,i)=>v?i:-1).filter(i=>i>=0);
+      if(remain.length) extinguish(remain[Math.floor(Math.random()*remain.length)]);
+      blowing=1.5;
+    }
+  }
+
+  async function startMic(){
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    }catch(e){
+      hint.textContent='마이크를 쓸 수 없어서,\n아래 버튼을 꾹 눌러 불어주세요';
+      micBtn.hidden=true; holdBtn.classList.remove('ghost'); return;
+    }
+    attachAnalyser();
+  }
+  function attachAnalyser(){
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const src=audioCtx.createMediaStreamSource(stream);
+    analyser=audioCtx.createAnalyser(); analyser.fftSize=1024;
+    if(audioCtx.resume)audioCtx.resume(); src.connect(analyser); data=new Uint8Array(analyser.frequencyBinCount);
+    micBtn.hidden=true; hint.textContent='준비됐어, 지금 "후~" 불어봐';
+    loop();
+  }
+  function loop(){
+    if(!analyser)return;
+    analyser.getByteFrequencyData(data);
+    // 바람 소리는 저역대 에너지가 큼
+    let sum=0,n=Math.floor(data.length*0.12);
+    for(let i=1;i<n;i++)sum+=data[i];
+    const level=Math.max(0,(sum/n-90)/110);
+    feed(level);
+    requestAnimationFrame(loop);
+  }
+  function stopMic(){
+    if(stream)stream.getTracks().forEach(t=>t.stop());
+    analyser=null; stream=null;
+    if(audioCtx){try{audioCtx.close()}catch(e){} audioCtx=null}
+    meter.style.width='0%'; sway(0);
+  }
+
+  // 마이크 없이 꾹 누르기
+  let holdT=null,holdLv=0;
+  function holdStart(e){e.preventDefault(); clearInterval(holdT);
+    holdT=setInterval(()=>{holdLv=Math.min(1,holdLv+0.08);feed(holdLv)},60)}
+  function holdEnd(){clearInterval(holdT);holdT=setInterval(()=>{holdLv=Math.max(0,holdLv-0.12);feed(holdLv);if(holdLv<=0)clearInterval(holdT)},60)}
+  holdBtn.addEventListener('pointerdown',holdStart);
+  ['pointerup','pointerleave','pointercancel'].forEach(t=>holdBtn.addEventListener(t,holdEnd));
+
+  // 전체화면: 버튼 또는 첫 터치 때 시도
+  const fsBtn=document.getElementById('fs');
+  const fsEl=document.documentElement;
+  const canFs=!!(fsEl.requestFullscreen||fsEl.webkitRequestFullscreen);
+  function isFs(){return !!(document.fullscreenElement||document.webkitFullscreenElement)}
+  function goFs(){ if(!canFs||isFs())return;
+    try{const r=(fsEl.requestFullscreen||fsEl.webkitRequestFullscreen).call(fsEl,{navigationUI:'hide'}); if(r&&r.catch)r.catch(()=>{});}catch(e){} }
+  function syncFs(){fsBtn.hidden=!canFs||isFs()}
+  fsBtn.addEventListener('click',goFs);
+  document.addEventListener('fullscreenchange',syncFs);
+  document.addEventListener('webkitfullscreenchange',syncFs);
+  syncFs();
+  micBtn.addEventListener('click',goFs);
+  holdBtn.addEventListener('pointerdown',goFs);
+
+  micBtn.addEventListener('click',startMic);
+  relight.addEventListener('click',()=>{
+    lit=[true,true,true]; blowing=0; holdLv=0;
+    flames.forEach(g=>{const p=g.querySelector('.flame');p.classList.remove('out');p.style.transform='';g.querySelector('.smoke').classList.remove('on')});
+    relight.hidden=true; holdBtn.hidden=false; micBtn.hidden=false; recBtn.hidden=false;
+    sub.textContent='400일 축하해!\n같이 웃고 먹고 걸은 날들이 모여서\n벌써 400일이 됐어';
+    hint.textContent='눈 감고 소원 하나 빈 다음,\n화면에 대고 "후~" 불어줘'; setGlow();
+  });
+
+  // ===== 얼굴 녹화 =====
+  const recBtn=document.getElementById('recbtn'), stopBtn=document.getElementById('stop');
+  const cam=document.getElementById('cam'), recEl=document.getElementById('rec'), recT=document.getElementById('rect');
+  const rc=document.getElementById('rc'), rx=rc.getContext('2d'), W=rc.width, H=rc.height;
+  const resultEl=document.getElementById('result'), outV=document.getElementById('out');
+  const cfC=document.getElementById('cf'), titleEl=document.getElementById('title');
+  let recorder=null, chunks=[], recording=false, recStart=0, outBlob=null, outName='';
+
+  let cakeImg=null;
+  (function buildCake(){
+    const svg=document.querySelector('.cake-wrap svg').cloneNode(true);
+    const f=svg.querySelector('#flames'); if(f) f.remove();
+    svg.setAttribute('xmlns','http://www.w3.org/2000/svg'); svg.setAttribute('width','600'); svg.setAttribute('height','520');
+    const im=new Image(); im.onload=()=>{cakeImg=im};
+    im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(svg));
+  })();
+  const flamePath=new Path2D('M0 -28 C8 -16 7 -6 0 0 C-7 -6 -8 -16 0 -28Z');
+  const flameXs=[96,150,208];
+
+  function pickType(){
+    const t=['video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+    if(!window.MediaRecorder||!MediaRecorder.isTypeSupported) return '';
+    for(const x of t){ if(MediaRecorder.isTypeSupported(x)) return x } return '';
+  }
+  function wrap(text,font,maxW){
+    rx.font=font; const out=[];
+    String(text).split('\n').forEach(line=>{
+      line=line.trim(); if(!line) return;
+      if(rx.measureText(line).width<=maxW){out.push(line);return}
+      let cur=''; line.split(' ').forEach(w=>{const t=cur?cur+' '+w:w; if(rx.measureText(t).width>maxW&&cur){out.push(cur);cur=w}else cur=t}); if(cur)out.push(cur);
+    }); return out;
+  }
+  function drawFrame(){
+    const n=litCount();
+    rx.fillStyle='#1b1420'; rx.fillRect(0,0,W,H);
+    const vw=cam.videoWidth, vh=cam.videoHeight;
+    if(vw&&vh){const sc=Math.max(W/vw,H/vh),dw=vw*sc,dh=vh*sc; rx.save(); rx.translate(W,0); rx.scale(-1,1); rx.drawImage(cam,(W-dw)/2,(H-dh)/2,dw,dh); rx.restore();}
+    rx.fillStyle='rgba(20,12,18,'+(0.3+(3-n)*0.17)+')'; rx.fillRect(0,0,W,H);
+    const ox=(W-600)/2, oy=H-520-90;
+    if(n){const g=rx.createRadialGradient(W/2,oy+140,0,W/2,oy+140,460); g.addColorStop(0,'rgba(255,190,90,'+(0.38*n/3)+')'); g.addColorStop(1,'rgba(255,190,90,0)'); rx.fillStyle=g; rx.fillRect(0,0,W,H);}
+    // 문구
+    const maxW=W-120;
+    const tl=wrap(titleEl.textContent,'700 54px "Gowun Batang", serif',maxW);
+    const sl=wrap(sub.textContent,'32px "Gowun Dodum", sans-serif',maxW);
+    const hl=wrap(hint.textContent,'30px "Gowun Dodum", sans-serif',maxW);
+    const hgt=tl.length*68+18+sl.length*46+(hl.length?16+hl.length*42:0)+48;
+    const by=96;
+    rx.fillStyle='rgba(20,12,18,.5)';
+    if(rx.roundRect){rx.beginPath(); rx.roundRect(40,by,W-80,hgt,32); rx.fill()} else rx.fillRect(40,by,W-80,hgt);
+    rx.textAlign='center'; rx.textBaseline='top'; let y=by+24;
+    rx.font='700 54px "Gowun Batang", serif'; rx.fillStyle='#f6ead8'; tl.forEach(l=>{rx.fillText(l,W/2,y);y+=68}); y+=18;
+    rx.font='32px "Gowun Dodum", sans-serif'; rx.fillStyle='#e6d6dc'; sl.forEach(l=>{rx.fillText(l,W/2,y);y+=46});
+    if(hl.length){y+=16; rx.font='30px "Gowun Dodum", sans-serif'; rx.fillStyle='#ffcf5a'; hl.forEach(l=>{rx.fillText(l,W/2,y);y+=42})}
+    // 케이크 + 불꽃
+    if(cakeImg) rx.drawImage(cakeImg,ox,oy,600,520);
+    const lv=Math.min(1,curLevel);
+    flameXs.forEach((fx,i)=>{ if(!lit[i]) return;
+      rx.save(); rx.translate(ox+fx*2, oy+86*2);
+      rx.transform(1,0,Math.tan(-lv*35*Math.PI/180),1,0,0);
+      rx.scale(2,2*(1-lv*.35)*(1+Math.random()*.08));
+      const g=rx.createRadialGradient(0,-8,0,0,-8,22); g.addColorStop(0,'#fff8d6'); g.addColorStop(.45,'#ffcf5a'); g.addColorStop(1,'#ff7a2e');
+      rx.shadowColor='rgba(255,170,60,.9)'; rx.shadowBlur=24; rx.fillStyle=g; rx.fill(flamePath); rx.restore();
+    });
+    if(n<3) rx.drawImage(cfC,0,0,W,H);
+    // 녹화 표시
+    const sec=Math.floor((performance.now()-recStart)/1000);
+    recT.textContent=String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0');
+  }
+  function drawLoop(){ if(!recording) return; drawFrame(); requestAnimationFrame(drawLoop); }
+
+  async function startRec(){
+    goFs();
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder||!rc.captureStream){
+      hint.textContent='이 브라우저에서는 녹화가 안 돼요.\n폰 화면 녹화 기능을 써 주세요'; recBtn.hidden=true; return startMic();
+    }
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({
+        video:{facingMode:'user',width:{ideal:720},height:{ideal:1280}},
+        audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    }catch(e){
+      hint.textContent='카메라를 켤 수 없어서\n마이크로만 불게요'; recBtn.hidden=true; return startMic();
+    }
+    cam.srcObject=stream; try{await cam.play()}catch(e){}
+    document.body.classList.add('camon'); recBtn.hidden=true; micBtn.hidden=true;
+    attachAnalyser();
+    const vs=rc.captureStream(30); stream.getAudioTracks().forEach(t=>vs.addTrack(t));
+    const type=pickType();
+    try{ recorder=new MediaRecorder(vs, type?{mimeType:type,videoBitsPerSecond:4000000}:undefined) }catch(e){ recorder=new MediaRecorder(vs) }
+    chunks=[]; recorder.ondataavailable=e=>{ if(e.data&&e.data.size) chunks.push(e.data) };
+    recorder.onstop=showResult;
+    recording=true; recStart=performance.now(); recorder.start(500);
+    recEl.hidden=false; stopBtn.hidden=false; drawLoop();
+  }
+  function finishRec(){
+    if(!recording) return; recording=false;
+    try{ recorder.stop() }catch(e){}
+    recEl.hidden=true; stopBtn.hidden=true;
+    stopMic(); cam.srcObject=null; document.body.classList.remove('camon');
+  }
+  function showResult(){
+    const type=(recorder&&recorder.mimeType)||'video/webm';
+    outBlob=new Blob(chunks,{type});
+    outName='우리의_400일.'+(type.indexOf('mp4')>=0?'mp4':'webm');
+    if(outV.src) URL.revokeObjectURL(outV.src);
+    outV.src=URL.createObjectURL(outBlob);
+    let canShare=false; try{ canShare=!!(navigator.canShare&&navigator.canShare({files:[new File([outBlob],outName,{type})]})) }catch(e){}
+    document.getElementById('share').hidden=!canShare;
+    resultEl.hidden=false;
+  }
+  recBtn.addEventListener('click',startRec);
+  stopBtn.addEventListener('click',finishRec);
+  document.getElementById('save').addEventListener('click',()=>{
+    const a=document.createElement('a'); a.href=outV.src; a.download=outName; document.body.appendChild(a); a.click(); a.remove();
+  });
+  document.getElementById('share').addEventListener('click',async()=>{
+    try{ await navigator.share({files:[new File([outBlob],outName,{type:outBlob.type})],title:'우리의 400일'}) }catch(e){}
+  });
+  document.getElementById('again').addEventListener('click',()=>{
+    resultEl.hidden=true; outV.pause(); relight.click();
+  });
+
+  // 꽃가루
+  function confetti(){
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    const c=document.getElementById('cf'),x=c.getContext('2d');
+    c.width=innerWidth;c.height=innerHeight;
+    const cols=['#ffcf5a','#d9536f','#fbe7ee','#f3dcc4','#ffffff'];
+    const ps=Array.from({length:120},()=>({x:Math.random()*c.width,y:-20-Math.random()*c.height*.5,
+      vx:(Math.random()-.5)*2,vy:2+Math.random()*3,r:Math.random()*6.28,s:4+Math.random()*5,c:cols[Math.floor(Math.random()*cols.length)]}));
+    let f=0;(function d(){x.clearRect(0,0,c.width,c.height);
+      ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=.1;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore()});
+      if(++f<260)requestAnimationFrame(d);else x.clearRect(0,0,c.width,c.height)})();
+  }
+  setGlow();
+})();
+</script>
+
+</body>
+</html>
